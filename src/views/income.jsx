@@ -59,11 +59,11 @@ export const Income = () => {
   const onSubmit = async (data) => {
     setLoading(true)
     try {
-      const { error, message } = await insertBills(data)
+      const { error } = await insertBills(data)
       if (!error) {
-        toast.success(message, { duration: 2000 })
+        toast.success('Registrado Exitosamente', { duration: 2000 })
       } else {
-        toast.error(message, { duration: 2000 })
+        toast.error('No se pudo registrar', { duration: 2000 })
       }
     } finally {
       setLoading(false)
@@ -89,9 +89,8 @@ export const Income = () => {
       <MenuDrawer>
         <div className='p-4 md:p-6 bg-gray-50 transition-colors duration-200'>
           <div className='max-w-4xl mx-auto'>
-            <div className='flex flex-col items-center justify-center mb-8'>
+            <div className='flex flex-col items-start justify-center mb-8'>
               <h1 className='text-3xl md:text-4xl font-bold text-gray-800'>Control Financiero</h1>
-              <p className='text-gray-600 mt-2'>Gestiona tus {activeTab.toLowerCase()} de manera eficiente</p>
             </div>
 
             <div className='bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100 transition-all duration-200'>

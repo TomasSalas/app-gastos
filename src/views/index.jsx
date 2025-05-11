@@ -18,14 +18,16 @@ import {
   Wallet,
   PiggyBank,
   CreditCard,
+  DollarSign,
 } from 'lucide-react'
 
 export const Index = () => {
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState([])
-  const [allData, setAllData] = useState([]) // Almacenar todos los datos sin filtrar
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1) // Mes actual (1-12)
+  const [allData, setAllData] = useState([])
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterType, setFilterType] = useState(null)
 
   const formatCLP = (amount) => {
     return new Intl.NumberFormat('es-CL', {
@@ -33,6 +35,13 @@ export const Index = () => {
       currency: 'CLP',
       minimumFractionDigits: 0,
     }).format(amount)
+  }
+
+  const formatDate = (dateStr) => {
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const paddedDay = String(day).padStart(2, '0')
+    const paddedMonth = String(month).padStart(2, '0')
+    return `${paddedDay}-${paddedMonth}-${year}`
   }
 
   const filterDataByMonth = (data, month, year) => {
@@ -52,11 +61,11 @@ export const Index = () => {
 
   const calculateDebt = (data) => {
     const totalDebt = data
-      .filter((item) => item.type === 'Deudas')
+      .filter((item) => item.type === 'Deudas' && item.subtype !== 'Pago Deuda')
       .reduce((sum, item) => sum + Number.parseInt(item.amount), 0)
 
     const debtPayments = data
-      .filter((item) => item.type === 'PagoDeuda')
+      .filter((item) => item.type === 'Deudas' && item.subtype === 'Pago Deuda')
       .reduce((sum, item) => sum + Number.parseInt(item.amount), 0)
 
     return totalDebt - debtPayments
@@ -119,15 +128,19 @@ export const Index = () => {
     setSelectedMonth(selectedOption ? selectedOption.id : new Date().getMonth() + 1)
   }
 
-  const filteredTransactions = data.filter(
-    (item) =>
+  // Filtrar transacciones por búsqueda y tipo
+  const filteredTransactions = (filterType === 'Deudas' ? allData : data).filter((item) => {
+    const matchesSearch =
       item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.date.includes(searchTerm)
-  )
 
-  // Get current month name
-  const currentMonthName = Meses.find((mes) => mes.id === selectedMonth)?.label || ''
+    if (!filterType) return matchesSearch
+    if (filterType === 'Deudas') {
+      return matchesSearch && (item.type === 'Deudas' || item.type === 'PagoDeuda')
+    }
+    return matchesSearch && item.type === filterType
+  })
 
   return (
     <>
@@ -139,9 +152,6 @@ export const Index = () => {
             <div className='flex flex-col md:flex-row md:items-center md:justify-between mb-8'>
               <div>
                 <h1 className='text-3xl md:text-4xl font-bold text-gray-800'>Panel Financiero</h1>
-                <p className='text-gray-600 mt-1'>
-                  Resumen financiero de <span className='font-medium'>{currentMonthName}</span>
-                </p>
               </div>
               <div className='mt-4'>
                 <Autocomplete
@@ -162,7 +172,12 @@ export const Index = () => {
             {/* Main Stats */}
             <div className='grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
               {/* Balance Card */}
-              <div className='bg-white rounded-xl shadow-md overflow-hidden border border-gray-100'>
+              <div
+                className={`bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 cursor-pointer transition-all ${
+                  filterType === null ? 'ring-2 ring-emerald-500' : ''
+                }`}
+                onClick={() => setFilterType(null)}
+              >
                 <div className='p-6'>
                   <div className='flex items-center justify-between mb-4'>
                     <div className='flex items-center'>
@@ -181,10 +196,10 @@ export const Index = () => {
                     >
                       {calculateBalance(data) >= 0
                         ? (
-                          <ArrowUpRight className='h-5 w-5' />
+                          <ArrowUpRight className='h-6 w-6' />
                           )
                         : (
-                          <ArrowDownRight className='h-5 w-5' />
+                          <ArrowDownRight className='h-6 w-6' />
                           )}
                     </div>
                   </div>
@@ -192,7 +207,12 @@ export const Index = () => {
               </div>
 
               {/* Savings Card */}
-              <div className='bg-white rounded-xl shadow-md overflow-hidden border border-gray-100'>
+              <div
+                className={`bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 cursor-pointer transition-all ${
+                  filterType === 'Ahorros' ? 'ring-2 ring-emerald-500' : ''
+                }`}
+                onClick={() => setFilterType('Ahorros')}
+              >
                 <div className='p-6'>
                   <div className='flex items-center justify-between mb-4'>
                     <div className='flex items-center'>
@@ -204,13 +224,18 @@ export const Index = () => {
                         <p className='text-2xl font-bold text-gray-800'>{formatCLP(calculateAhorro(data))}</p>
                       </div>
                     </div>
-                    <CircleCheck className='h-5 w-5 text-blue-600' />
+                    <CircleCheck className='h-6 w-6 text-blue-600' />
                   </div>
                 </div>
               </div>
 
               {/* Debt Card */}
-              <div className='bg-white rounded-xl shadow-md overflow-hidden border border-gray-100'>
+              <div
+                className={`bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 cursor-pointer transition-all ${
+                  filterType === 'Deudas' ? 'ring-2 ring-emerald-500' : ''
+                }`}
+                onClick={() => setFilterType('Deudas')}
+              >
                 <div className='p-6'>
                   <div className='flex items-center justify-between mb-4'>
                     <div className='flex items-center'>
@@ -219,10 +244,10 @@ export const Index = () => {
                       </div>
                       <div>
                         <h2 className='text-sm font-medium text-gray-500'>Deuda Total</h2>
-                        <p className='text-2xl font-bold text-gray-800'>{formatCLP(calculateDebt(data))}</p>
+                        <p className='text-2xl font-bold text-gray-800'>{formatCLP(calculateDebt(allData))}</p>
                       </div>
                     </div>
-                    <CircleAlert className='h-5 w-5 text-amber-600' />
+                    <CircleAlert className='h-6 w-6 text-amber-600' />
                   </div>
                 </div>
               </div>
@@ -231,7 +256,12 @@ export const Index = () => {
             {/* Secondary Stats */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
               {/* Income Card */}
-              <div className='bg-white rounded-xl shadow-md overflow-hidden border border-gray-100'>
+              <div
+                className={`bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 cursor-pointer transition-all ${
+                  filterType === 'Ingresos' ? 'ring-2 ring-emerald-500' : ''
+                }`}
+                onClick={() => setFilterType('Ingresos')}
+              >
                 <div className='p-6'>
                   <div className='flex items-center justify-between mb-4'>
                     <div className='flex items-center'>
@@ -243,13 +273,18 @@ export const Index = () => {
                         <p className='text-2xl font-bold text-gray-800'>{formatCLP(calculateIngresos(data))}</p>
                       </div>
                     </div>
-                    <TrendingUp className='h-5 w-5 text-emerald-600' />
+                    <TrendingUp className='h-6 w-6 text-emerald-600' />
                   </div>
                 </div>
               </div>
 
               {/* Expenses Card */}
-              <div className='bg-white rounded-xl shadow-md overflow-hidden border border-gray-100'>
+              <div
+                className={`bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 cursor-pointer transition-all ${
+                  filterType === 'Egresos' ? 'ring-2 ring-emerald-500' : ''
+                }`}
+                onClick={() => setFilterType('Egresos')}
+              >
                 <div className='p-6'>
                   <div className='flex items-center justify-between mb-4'>
                     <div className='flex items-center'>
@@ -261,7 +296,7 @@ export const Index = () => {
                         <p className='text-2xl font-bold text-gray-800'>{formatCLP(calculateEgresos(data))}</p>
                       </div>
                     </div>
-                    <TrendingDown className='h-5 w-5 text-red-600' />
+                    <TrendingDown className='h-6 w-6 text-red-600' />
                   </div>
                 </div>
               </div>
@@ -288,16 +323,10 @@ export const Index = () => {
 
                 <div className='overflow-x-auto'>
                   <div className='inline-block min-w-full align-middle'>
-                    <div className='overflow-hidden border border-gray-200 rounded-lg'>
+                    <div className='overflow-hidden border border-gray-200 rounded-lg max-h-[30vh] overflow-y-auto'>
                       <table className='min-w-full divide-y divide-gray-200'>
                         <thead className='bg-gray-50'>
                           <tr>
-                            <th
-                              scope='col'
-                              className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                            >
-                              Fecha
-                            </th>
                             <th
                               scope='col'
                               className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
@@ -312,9 +341,21 @@ export const Index = () => {
                             </th>
                             <th
                               scope='col'
+                              className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                            >
+                              Subtipo
+                            </th>
+                            <th
+                              scope='col'
                               className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'
                             >
                               Monto
+                            </th>
+                            <th
+                              scope='col'
+                              className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                            >
+                              Fecha
                             </th>
                           </tr>
                         </thead>
@@ -323,7 +364,6 @@ export const Index = () => {
                             ? (
                                 filteredTransactions.map((item, index) => (
                                   <tr key={index} className='hover:bg-gray-50'>
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>{item.date}</td>
                                     <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
                                       {item.description}
                                     </td>
@@ -333,39 +373,58 @@ export const Index = () => {
                                       item.type === 'Ingresos'
                                         ? 'bg-emerald-100 text-emerald-800'
                                         : item.type === 'Egresos'
-                                          ? 'bg-red-100 text-red-800'
-                                          : item.type === 'Ahorros'
-                                            ? 'bg-blue-100 text-blue-800'
-                                            : item.type === 'Deudas'
-                                              ? 'bg-amber-100 text-amber-800'
-                                              : 'bg-gray-100 text-gray-800'
+                                        ? 'bg-red-100 text-red-800'
+                                        : item.type === 'Ahorros'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : (item.type === 'Deudas' && item.subtype === 'Pago Deuda') || item.type === 'PagoDeuda'
+                                        ? 'bg-green-100 text-green-800'
+                                        : item.type === 'Deudas'
+                                        ? 'bg-amber-100 text-amber-800'
+                                        : 'bg-gray-100 text-gray-800'
                                     }`}
                                       >
                                         {item.type === 'Ingresos' && <CirclePlus className='w-3 h-3 mr-1' />}
                                         {item.type === 'Egresos' && <MinusCircle className='w-3 h-3 mr-1' />}
                                         {item.type === 'Ahorros' && <PiggyBank className='w-3 h-3 mr-1' />}
-                                        {item.type === 'Deudas' && <CreditCard className='w-3 h-3 mr-1' />}
-                                        {item.type}
+                                        {(item.type === 'Deudas' && item.subtype === 'Pago Deuda') || item.type === 'PagoDeuda'
+                                          ? (
+                                            <DollarSign className='w-3 h-3 mr-1' />
+                                            )
+                                          : item.type === 'Deudas'
+                                            ? (
+                                              <CreditCard className='w-3 h-3 mr-1' />
+                                              )
+                                            : null}
+                                        {(item.type === 'Deudas' && item.subtype === 'Pago Deuda') || item.type === 'PagoDeuda'
+                                          ? 'Pago Deuda'
+                                          : item.type}
                                       </span>
+                                    </td>
+                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                                      {item.subtype || '-'}
                                     </td>
                                     <td
                                       className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${
                                     item.type === 'Ingresos' || item.type === 'Ahorros'
                                       ? 'text-emerald-600'
-                                      : item.type === 'Egresos' || item.type === 'Deudas'
-                                        ? 'text-red-600'
-                                        : 'text-gray-900'
+                                      : item.type === 'Egresos'
+                                      ? 'text-red-600'
+                                      : (item.type === 'Deudas' && item.subtype === 'Pago Deuda') || item.type === 'PagoDeuda'
+                                      ? 'text-green-600'
+                                      : item.type === 'Deudas'
+                                      ? 'text-amber-600'
+                                      : 'text-gray-900'
                                   }`}
                                     >
-                                      {item.type === 'Ingresos' || item.type === 'Ahorros' ? '+' : ''}
                                       {formatCLP(item.amount)}
                                     </td>
+                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>{formatDate(item.date)}</td>
                                   </tr>
                                 ))
                               )
                             : (
                               <tr>
-                                <td colSpan={4} className='px-6 py-4 text-center text-sm text-gray-500'>
+                                <td colSpan={5} className='px-6 py-4 text-center text-sm text-gray-500'>
                                   No se encontraron transacciones
                                 </td>
                               </tr>

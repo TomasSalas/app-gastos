@@ -10,7 +10,8 @@ export const insertBills = async (data) => {
       type: data.tipoIngreso.option,
       amount: cleanAmount,
       date: data.fecha,
-      description: data.descripcion
+      description: data.descripcion,
+      subtype: data.tipoIngreso.value,
     }
 
     const response = await api.post('/create-bill', dataPost)

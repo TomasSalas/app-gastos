@@ -14,7 +14,6 @@ export const userSesion = async (email, password) => {
   }
   try {
     const response = await fetch(url, requestOptions)
-    console.log('Response:', response)
     if (response.status !== 200) {
       return {
         error: true,
