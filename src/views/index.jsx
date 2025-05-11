@@ -320,12 +320,11 @@ export const Index = () => {
                     />
                   </div>
                 </div>
-
                 <div className='overflow-x-auto'>
                   <div className='inline-block min-w-full align-middle'>
                     <div className='overflow-hidden border border-gray-200 rounded-lg max-h-[30vh] overflow-y-auto'>
                       <table className='min-w-full divide-y divide-gray-200'>
-                        <thead className='bg-gray-50'>
+                        <thead className='bg-gray-50 sticky top-0 z-10'>
                           <tr>
                             <th
                               scope='col'
@@ -360,6 +359,7 @@ export const Index = () => {
                           </tr>
                         </thead>
                         <tbody className='bg-white divide-y divide-gray-200'>
+                          {/* Resto del código de la tabla sin cambios */}
                           {filteredTransactions.length > 0
                             ? (
                                 filteredTransactions.map((item, index) => (
@@ -370,18 +370,18 @@ export const Index = () => {
                                     <td className='px-6 py-4 whitespace-nowrap text-sm'>
                                       <span
                                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                      item.type === 'Ingresos'
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : item.type === 'Egresos'
-                                        ? 'bg-red-100 text-red-800'
-                                        : item.type === 'Ahorros'
-                                        ? 'bg-blue-100 text-blue-800'
-                                        : (item.type === 'Deudas' && item.subtype === 'Pago Deuda') || item.type === 'PagoDeuda'
-                                        ? 'bg-green-100 text-green-800'
-                                        : item.type === 'Deudas'
-                                        ? 'bg-amber-100 text-amber-800'
-                                        : 'bg-gray-100 text-gray-800'
-                                    }`}
+                                          item.type === 'Ingresos'
+                                            ? 'bg-emerald-100 text-emerald-800'
+                                            : item.type === 'Egresos'
+                                            ? 'bg-red-100 text-red-800'
+                                            : item.type === 'Ahorros'
+                                            ? 'bg-blue-100 text-blue-800'
+                                            : (item.type === 'Deudas' && item.subtype === 'Pago Deuda') || item.type === 'PagoDeuda'
+                                            ? 'bg-green-100 text-green-800'
+                                            : item.type === 'Deudas'
+                                            ? 'bg-amber-100 text-amber-800'
+                                            : 'bg-gray-100 text-gray-800'
+                                        }`}
                                       >
                                         {item.type === 'Ingresos' && <CirclePlus className='w-3 h-3 mr-1' />}
                                         {item.type === 'Egresos' && <MinusCircle className='w-3 h-3 mr-1' />}
@@ -405,20 +405,22 @@ export const Index = () => {
                                     </td>
                                     <td
                                       className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${
-                                    item.type === 'Ingresos' || item.type === 'Ahorros'
-                                      ? 'text-emerald-600'
-                                      : item.type === 'Egresos'
-                                      ? 'text-red-600'
-                                      : (item.type === 'Deudas' && item.subtype === 'Pago Deuda') || item.type === 'PagoDeuda'
-                                      ? 'text-green-600'
-                                      : item.type === 'Deudas'
-                                      ? 'text-amber-600'
-                                      : 'text-gray-900'
-                                  }`}
+                                        item.type === 'Ingresos' || item.type === 'Ahorros'
+                                          ? 'text-emerald-600'
+                                          : item.type === 'Egresos'
+                                          ? 'text-red-600'
+                                          : (item.type === 'Deudas' && item.subtype === 'Pago Deuda') || item.type === 'PagoDeuda'
+                                          ? 'text-green-600'
+                                          : item.type === 'Deudas'
+                                          ? 'text-amber-600'
+                                          : 'text-gray-900'
+                                      }`}
                                     >
                                       {formatCLP(item.amount)}
                                     </td>
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>{formatDate(item.date)}</td>
+                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                                      {formatDate(item.date)}
+                                    </td>
                                   </tr>
                                 ))
                               )
