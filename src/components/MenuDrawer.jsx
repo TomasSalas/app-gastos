@@ -48,7 +48,7 @@ export const MenuDrawer = ({ children }) => {
     <>
       {loading && <Loading />}
       <div className='relative min-h-screen'>
-        <header className='bg-white fixed top-0 left-0 right-0 flex items-center justify-between p-3 shadow-lg'>
+        <header className='bg-white fixed top-0 left-0 right-0 flex items-center justify-between p-3 shadow-lg z-50'>
           <button
             onClick={toggleDrawer}
             className='p-2 text-black rounded-full hover:bg-white/20 transition-all duration-200'
