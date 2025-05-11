@@ -1,1 +1,1 @@
-export const RUTABASE = 'http://localhost:3000'
+export const RUTABASE = 'https://api-gastos-production.up.railway.app'
