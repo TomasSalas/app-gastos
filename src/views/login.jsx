@@ -44,7 +44,7 @@ export const Login = () => {
   const onSubmit = async (data) => {
     setLoading(true)
     try {
-      const { error, result } = await userSesion(data.email, data.password)
+      const { error, result } = await userSesion(String(data.email).toLowerCase(), data.password)
       if (!error) {
         window.localStorage.setItem('token', result.accessToken)
         window.localStorage.setItem('user', JSON.stringify(result.user))
