@@ -7,13 +7,14 @@ export const dataTipoIngreso = [
   { id: 6, value: 'Bencina', option: 'Egresos' },
   { id: 7, value: 'Compra', option: 'Egresos' },
   { id: 8, value: 'Gimnasio', option: 'Egresos' },
-  { id: 9, value: 'Otros', option: 'Egresos' },
+  { id: 9, value: 'Ahorros', option: 'Egresos' },
   { id: 10, value: 'Tarjeta Crédito', option: 'Deudas' },
   { id: 11, value: 'Prestamo', option: 'Deudas' },
   { id: 12, value: 'Crédito', option: 'Deudas' },
-  { id: 13, value: 'Pago Deuda', option: 'Deudas' },
-  { id: 14, value: 'Otros', option: 'Deudas' },
-  { id: 15, value: 'Ahorros', option: 'Ahorros' },
+  { id: 13, value: 'Pago Deuda', option: 'Egresos' },
+  { id: 14, value: 'Ahorros', option: 'Ahorros' },
+  { id: 15, value: 'Otros', option: 'Deudas' },
+  { id: 16, value: 'Otros', option: 'Egresos' },
 ]
 
 export const Meses = [

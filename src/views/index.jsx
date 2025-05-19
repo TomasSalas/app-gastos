@@ -65,7 +65,7 @@ export const Index = () => {
       .reduce((sum, item) => sum + Number.parseInt(item.amount), 0)
 
     const debtPayments = data
-      .filter((item) => item.type === 'Deudas' && item.subtype === 'Pago Deuda')
+      .filter((item) => (item.type === 'Egresos' && item.subtype === 'Pago Deuda') || item.type === 'PagoDeuda')
       .reduce((sum, item) => sum + Number.parseInt(item.amount), 0)
 
     return totalDebt - debtPayments
@@ -75,7 +75,7 @@ export const Index = () => {
     return data.reduce((sum, item) => {
       if (item.type === 'Ingresos') {
         return sum + Number.parseInt(item.amount)
-      } else if (item.type === 'Egresos') {
+      } else if (item.type === 'Egresos' || item.type === 'Ahorros') {
         return sum - Number.parseInt(item.amount)
       }
       return sum
@@ -84,7 +84,7 @@ export const Index = () => {
 
   const calculateAhorro = (data) => {
     return data.reduce((sum, item) => {
-      if (item.type === 'Ahorros') {
+      if (item.type === 'Ahorros' || (item.type === 'Egresos' && item.subtype === 'Ahorros')) {
         return sum + Number.parseInt(item.amount)
       }
       return sum
@@ -96,7 +96,9 @@ export const Index = () => {
   }
 
   const calculateEgresos = (data) => {
-    return data.filter((item) => item.type === 'Egresos').reduce((sum, item) => sum + Number.parseInt(item.amount), 0)
+    return data
+      .filter((item) => item.type === 'Egresos' || item.type === 'Ahorros')
+      .reduce((sum, item) => sum + Number.parseInt(item.amount), 0)
   }
 
   const Bills = async () => {
@@ -128,16 +130,15 @@ export const Index = () => {
     setSelectedMonth(selectedOption ? selectedOption.id : new Date().getMonth() + 1)
   }
 
-  // Filtrar transacciones por búsqueda y tipo
   const filteredTransactions = (filterType === 'Deudas' ? allData : data).filter((item) => {
     const matchesSearch =
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.date.includes(searchTerm)
+    item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.date.includes(searchTerm)
 
     if (!filterType) return matchesSearch
     if (filterType === 'Deudas') {
-      return matchesSearch && (item.type === 'Deudas' || item.type === 'PagoDeuda')
+      return matchesSearch && (item.type === 'Deudas' || (item.type === 'Egresos' && item.subtype === 'Pago Deuda'))
     }
     return matchesSearch && item.type === filterType
   })
