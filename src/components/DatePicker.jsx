@@ -17,7 +17,10 @@ export const DatePicker = ({
   onDateChange = null,
 }) => {
   const [showCalendar, setShowCalendar] = useState(false)
-  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const date = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()))
+    return date
+  })
   const [inputValue, setInputValue] = useState('')
   const [selectedDate, setSelectedDate] = useState(null)
   const [rangeStart, setRangeStart] = useState(null)
@@ -43,16 +46,19 @@ export const DatePicker = ({
   ]
 
   const formatDate = (date) => {
-    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
   }
 
   const formatISO = (date) => {
-    return date.toISOString().split('T')[0]
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   }
 
   const parseInputToDate = (input) => {
     const [day, month, year] = input.split('/').map(Number)
-    const date = new Date(year, month - 1, day)
+    const date = new Date(Date.UTC(year, month - 1, day))
     return isNaN(date.getTime()) ? null : date
   }
 
@@ -79,7 +85,8 @@ export const DatePicker = ({
 
   const handleDateSelect = (e, day) => {
     e.preventDefault()
-    const selected = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+    const selected = new Date(Date.UTC(currentMonth.getUTCFullYear(), currentMonth.getUTCMonth(), day))
+    console.log('Selected Date:', selected, 'Formatted:', formatISO(selected))
 
     if (range) {
       if (!rangeStart || (rangeStart && rangeEnd)) {
@@ -96,7 +103,7 @@ export const DatePicker = ({
         onRangeChange(formatISO(start), formatISO(end))
 
         if (typeof onChange === 'function') {
-          onChange(formattedValue) // Pass raw value for RHF
+          onChange(formattedValue)
         }
 
         if (typeof onDateChange === 'function') {
@@ -123,7 +130,7 @@ export const DatePicker = ({
       const formattedValue = formatISO(selected)
 
       if (typeof onChange === 'function') {
-        onChange(formattedValue) // Pass raw value for RHF
+        onChange(formattedValue)
       }
 
       if (typeof onDateChange === 'function') {
@@ -145,7 +152,7 @@ export const DatePicker = ({
   const handleMonthChange = (offset, isCtrlPressed = false) => {
     const newDate = new Date(currentMonth)
     const delta = isCtrlPressed ? offset * 12 : offset
-    newDate.setMonth(currentMonth.getMonth() + delta)
+    newDate.setUTCMonth(newDate.getUTCMonth() + delta)
     setCurrentMonth(newDate)
   }
 
@@ -167,7 +174,7 @@ export const DatePicker = ({
         const formattedValue = formatISO(date)
 
         if (typeof onChange === 'function') {
-          onChange(formattedValue) // Pass raw value for RHF
+          onChange(formattedValue)
         }
 
         if (typeof onDateChange === 'function') {
@@ -185,17 +192,17 @@ export const DatePicker = ({
   }
 
   const generateCalendar = () => {
-    const year = currentMonth.getFullYear()
-    const month = currentMonth.getMonth()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const startDay = new Date(year, month, 1).getDay()
-    const today = new Date()
+    const year = currentMonth.getUTCFullYear()
+    const month = currentMonth.getUTCMonth()
+    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
+    const startDay = new Date(Date.UTC(year, month, 1)).getUTCDay()
+    const today = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()))
 
     return (
       <div
         ref={calendarRef}
         className='absolute left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-3 z-50 w-[300px] max-w-full'
-        style={{ width: '300px' }}
+        style={{ width: '300px', touchAction: 'manipulation' }}
       >
         <div className='flex justify-between items-center mb-3 px-1'>
           <button
@@ -235,15 +242,15 @@ export const DatePicker = ({
           ))}
           {Array.from({ length: daysInMonth }, (_, i) => {
             const day = i + 1
-            const current = new Date(year, month, day)
+            const current = new Date(Date.UTC(year, month, day))
 
-            const isToday = current.toDateString() === today.toDateString()
-            const isSelected = !range && selectedDate && current.toDateString() === selectedDate.toDateString()
+            const isToday = current.toUTCString() === today.toUTCString()
+            const isSelected = !range && selectedDate && current.toUTCString() === selectedDate.toUTCString()
             const isInRange = rangeStart && rangeEnd && current >= rangeStart && current <= rangeEnd
-            const isStart = rangeStart && current.toDateString() === rangeStart.toDateString()
-            const isEnd = rangeEnd && current.toDateString() === rangeEnd.toDateString()
+            const isStart = rangeStart && current.toUTCString() === rangeStart.toUTCString()
+            const isEnd = rangeEnd && current.toUTCString() === rangeEnd.toUTCString()
 
-            const baseClass = 'w-full h-8 flex items-center justify-center rounded-md text-sm transition-colors'
+            const baseClass = 'w-full h-10 flex items-center justify-center rounded-md text-sm transition-colors'
             const highlight = isSelected
               ? `${selectedClassName || 'bg-emerald-500 text-white font-medium'}`
               : isStart || isEnd
@@ -259,6 +266,7 @@ export const DatePicker = ({
                 key={day}
                 className={`${baseClass} ${highlight} ${hoverClassName || 'hover:bg-emerald-100'}`}
                 onClick={(e) => handleDateSelect(e, day)}
+                onTouchStart={(e) => e.preventDefault()}
               >
                 {day}
               </button>
@@ -270,7 +278,14 @@ export const DatePicker = ({
   }
 
   useEffect(() => {
-    if (value) {
+    if (!value) {
+      // Reset internal state when value is null or undefined
+      setInputValue('')
+      setSelectedDate(null)
+      setRangeStart(null)
+      setRangeEnd(null)
+      setCurrentMonth(new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate())))
+    } else {
       try {
         if (range && typeof value === 'string' && value.includes('to')) {
           const [startStr, endStr] = value.split(' to ')
@@ -327,6 +342,7 @@ export const DatePicker = ({
           onBlur={onBlur}
           name={name}
           className='w-full outline-none text-sm text-gray-900 placeholder:text-gray-400 h-[24px]'
+          style={{ touchAction: 'manipulation' }}
         />
       </div>
       <div className='h-[4px] my-[0.5px] ml-2'>
